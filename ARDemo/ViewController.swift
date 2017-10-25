@@ -10,58 +10,67 @@ import UIKit
 import SceneKit
 import ARKit
 
-class ViewController: UIViewController, ARSCNViewDelegate {
+class ViewController: UIViewController {
 
     @IBOutlet var sceneView: ARSCNView!
+    @IBOutlet weak var frameView: UIView!
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        // Set the view's delegate
         sceneView.delegate = self
         
-        // Show statistics such as fps and timing information
-        sceneView.showsStatistics = true
+        sceneView.scene = SCNScene()
+        sceneView.debugOptions =
+            [ARSCNDebugOptions.showFeaturePoints, ARSCNDebugOptions.showWorldOrigin]
         
-        // Create a new scene
-        let scene = SCNScene(named: "art.scnassets/ship.scn")!
-        
-        // Set the scene to the view
-        sceneView.scene = scene
+        frameView.layer.borderColor = UIColor.black.cgColor
+        frameView.layer.borderWidth = 2.0
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
-        // Create a session configuration
         let configuration = ARWorldTrackingConfiguration()
-
-        // Run the view's session
         sceneView.session.run(configuration)
     }
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        
-        // Pause the view's session
         sceneView.session.pause()
     }
     
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Release any cached data, images, etc that aren't in use.
+    @IBAction func onTapAddButton(_ sender: Any) {
+        let macbook = createObject(position: SCNVector3(100, 0, 0), restitution: 1.0, filepath: "art.scnassets/macbook/macbook.dae")
+        sceneView.scene.rootNode.addChildNode(macbook)
     }
 
-    // MARK: - ARSCNViewDelegate
+    @IBAction func onTapCaptureButton(_ sender: Any) {
+        
+    }
     
-/*
-    // Override to create and configure nodes for anchors added to the view's session.
-    func renderer(_ renderer: SCNSceneRenderer, nodeFor anchor: ARAnchor) -> SCNNode? {
-        let node = SCNNode()
-     
+    func createObject(position:SCNVector3, restitution:CGFloat, filepath:String) -> SCNNode {
+        let scene = SCNScene(named: filepath)
+        let node: SCNNode = scene!.rootNode.childNodes[0]
+        let aModelShape = SCNPhysicsShape(node: node, options: nil)
+        let physicsBody = SCNPhysicsBody(type: .dynamic, shape: aModelShape)
+        physicsBody.restitution = restitution
+        node.physicsBody = physicsBody
+        node.position = position
+
         return node
     }
-*/
+}
+
+extension ViewController: ARSCNViewDelegate {
+    /*
+     // Override to create and configure nodes for anchors added to the view's session.
+     func renderer(_ renderer: SCNSceneRenderer, nodeFor anchor: ARAnchor) -> SCNNode? {
+     let node = SCNNode()
+     
+     return node
+     }
+     */
     
     func session(_ session: ARSession, didFailWithError error: Error) {
         // Present an error message to the user
